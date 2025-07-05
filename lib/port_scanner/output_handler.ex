@@ -8,11 +8,11 @@ end
 defmodule PortScanner.ConsoleOutput do
   @behaviour PortScanner.OutputHandler
   
-  def scan_started(host, port_count, opts) do
+  def scan_started(hosts, port_count, opts) do
     max_concurrency = Keyword.get(opts, :max_concurrency, 100)
     timeout = Keyword.get(opts, :timeout, 1000)
     
-    IO.puts("Starting scan of #{host} on #{port_count} ports...")
+    IO.puts("Starting scan of #{hosts} on #{port_count} ports...")
     IO.puts("Max concurrency: #{max_concurrency}, Timeout: #{timeout}ms")
   end
   
@@ -32,7 +32,7 @@ defmodule PortScanner.ConsoleOutput do
     if open_ports = grouped[:open] do
       IO.puts("\nOPEN PORTS (#{length(open_ports)}):")
       open_ports
-      |> Enum.sort_by(& &1.port)
+      |> Enum.sort_by(fn result -> {result.host, result.port} end)
       |> Enum.each(fn result ->
         IO.puts("  #{result.host}:#{result.port}")
       end)

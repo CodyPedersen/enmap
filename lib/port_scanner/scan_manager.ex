@@ -1,7 +1,6 @@
 defmodule PortScanner.ScanManager do
   use GenServer
   
-  # Client API
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{results: [], total_scanned: 0}, name: __MODULE__)
   end

@@ -1,16 +1,33 @@
 defmodule PortScanner do
   alias PortScanner.ScanManager
   
+  def scan_hosts(hosts, ports, opts) do
+    ScanManager.clear_results()
+    
+    output_handler = Keyword.get(opts, :output_handler, PortScanner.ConsoleOutput)
+    output_handler.scan_started(
+      Enum.join(hosts,","),
+      length(ports),
+      opts
+    )
+    
+    start_time = System.monotonic_time(:millisecond)
+    Task.Supervisor.async_stream(
+      PortScanner.ScanTaskSupervisor,
+      hosts,
+      fn host -> PortScanner.scan_host(host, ports, opts) end
+    ) |> Stream.run()
+
+    end_time = System.monotonic_time(:millisecond)
+    duration = end_time - start_time
+    
+    output_handler.scan_completed(duration)
+    print_results(output_handler)
+  end
+
   def scan_host(host, ports, opts \\ []) do
     max_concurrency = Keyword.get(opts, :max_concurrency, 100)
     timeout = Keyword.get(opts, :timeout, 1000)
-    output_handler = Keyword.get(opts, :output_handler, PortScanner.ConsoleOutput)
-    
-    output_handler.scan_started(host, length(ports), opts)
-    
-    ScanManager.clear_results()
-    
-    start_time = System.monotonic_time(:millisecond)
     
     Task.Supervisor.async_stream(
       PortScanner.ScanTaskSupervisor,
@@ -19,14 +36,7 @@ defmodule PortScanner do
       max_concurrency: max_concurrency,
       timeout: timeout + 500
     )
-    |> Stream.run()  # Execute all tasks
-    
-    end_time = System.monotonic_time(:millisecond)
-    duration = end_time - start_time
-    
-    output_handler.scan_completed(duration)
-    
-    print_results(output_handler)
+    |> Stream.run()
   end
   
   defp scan_single_port(host, port, timeout) do

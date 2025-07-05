@@ -13,7 +13,7 @@ defmodule PortScanner.CLI do
       OptionParser.parse(args,
         switches: [
           help: :boolean,
-          host: :string,
+          hosts: :string,
           ports: :string,
           timeout: :integer,
           concurrency: :integer,
@@ -22,7 +22,7 @@ defmodule PortScanner.CLI do
         ],
         aliases: [
           h: :help,
-          H: :host,
+          H: :hosts,
           p: :ports,
           t: :timeout,
           c: :concurrency,
@@ -35,8 +35,8 @@ defmodule PortScanner.CLI do
         :help
       {options, []} when options != [] ->
         options
-      {options, [host | _]} ->
-        Keyword.put(options, :host, host)
+      {options, [hosts | _]} ->
+        Keyword.put(options, :hosts, hosts)
       _ ->
         :help
     end
@@ -49,7 +49,7 @@ defmodule PortScanner.CLI do
       portscan [options] <host>
       portscan -H <host> [options]
     Options:
-      -H, --host <host>        Target host to scan
+      -H, --hosts <hosts>      Target hosts to scan
       -p, --ports <ports>      Comma-separated ports (e.g., 80,443,8080)
       -r, --range <range>      Port range (e.g., 1-1000)
       -t, --timeout <ms>       Timeout in milliseconds (default: 1000)
@@ -67,24 +67,29 @@ defmodule PortScanner.CLI do
     # Start the supervisor
     {:ok, _pid} = PortScanner.ScannerSupervisor.start_link([])
     
-    host = Keyword.get(options, :host)
-    unless host do
+    hosts = Keyword.get(options, :hosts)
+    unless hosts do
       IO.puts("Error: Host is required")
       System.halt(1)
     end
-    
+    hosts = get_hosts(options)
     ports = get_ports(options)
     timeout = Keyword.get(options, :timeout, 7000)
     concurrency = Keyword.get(options, :concurrency, 100)
     output_handler = get_output_handler(options)
     
-    PortScanner.scan_host(host, ports, [
+    PortScanner.scan_hosts(hosts, ports, [
       max_concurrency: concurrency,
       timeout: timeout,
       output_handler: output_handler
     ])
   end
-  
+
+  defp get_hosts(options) do
+    hosts_str = Keyword.get(options, :hosts)
+    hosts_str |> String.split(",")
+  end
+
   defp get_ports(options) do
     cond do
       ports_str = Keyword.get(options, :ports) ->
