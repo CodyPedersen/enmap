@@ -12,19 +12,14 @@ defmodule PortScanner do
       opts
     )
     
-    start_time = System.monotonic_time(:millisecond)
     Task.Supervisor.async_stream(
       @task_supervisor_name,
       hosts,
       fn host -> PortScanner.scan_host(host, ports, opts) end,
       timeout: 50000
     ) |> Stream.run()
-    end_time = System.monotonic_time(:millisecond)
-    duration = end_time - start_time
 
-    output_handler.on_complete(duration)
-
-    output_handler.print_results(
+    output_handler.on_complete(
       ScanManager.get_results(),
       ScanManager.get_stats() 
     )
