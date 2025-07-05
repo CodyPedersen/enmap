@@ -57,18 +57,9 @@ defmodule PortScanner.ScanManager do
       total_scanned: state.total_scanned,
       open_ports: open_ports,
       closed_ports: closed_ports,
-      scan_time: get_scan_duration(state.results)
     }
     
     {:reply, stats, state}
-  end
-  
-  defp get_scan_duration([]), do: 0
-  defp get_scan_duration(results) do
-    timestamps = Enum.map(results, & &1.timestamp)
-    oldest = Enum.min(timestamps)
-    newest = Enum.max(timestamps)
-    DateTime.diff(newest, oldest, :millisecond)
   end
 end
 

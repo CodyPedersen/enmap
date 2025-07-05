@@ -25,28 +25,7 @@ defmodule PortScanner.ConsoleOutput do
     IO.puts("SCAN RESULTS")
     IO.puts(String.duplicate("=", 50))
     
-    # Group results by status
-    grouped = Enum.group_by(results, & &1.status)
-    
-    # Show open ports first
-    if open_ports = grouped[:open] do
-      IO.puts("\nOPEN PORTS (#{length(open_ports)}):")
-      open_ports
-      |> Enum.sort_by(fn result -> {result.host, result.port} end)
-      |> Enum.each(fn result ->
-        IO.puts("  #{result.host}:#{result.port}")
-      end)
-    end
-    
-    # Show closed ports summary
-    if closed_ports = grouped[:closed] do
-      IO.puts("\nCLOSED PORTS: #{length(closed_ports)}")
-    end
-    
-    # Show timeout ports
-    if timeout_ports = grouped[:timeout] do
-      IO.puts("\nTIMEOUT PORTS: #{length(timeout_ports)}")
-    end
+    print_port_results(results)   
     
     # Show statistics
     IO.puts("\n" <> String.duplicate("-", 30))
@@ -57,6 +36,28 @@ defmodule PortScanner.ConsoleOutput do
     IO.puts("Closed ports: #{stats.closed_ports}")
     IO.puts("Scan duration: #{stats.scan_time}ms")
     IO.puts(String.duplicate("=", 50))
+  end
+
+  def print_port_results(results) do
+    categories = [:open, :closed, :unknown]
+    categories
+    |> Enum.each(fn type ->
+      print_port_category(type, results)
+    end)
+  end
+
+  def print_port_category(type, results) do
+    grouped = Enum.group_by(results, & &1.status)
+    type_ports = grouped[type]
+
+    if type_ports do
+      IO.puts("\U #{type} ports (#{length(type_ports)})")
+      type_ports
+      |> Enum.sort_by(fn result -> {result.host, result.port} end)
+      |> Enum.each(fn result ->
+        IO.puts("  #{result.host}:#{result.port}")
+      end)
+    end
   end
 end
 

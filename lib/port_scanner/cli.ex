@@ -104,7 +104,6 @@ defmodule PortScanner.CLI do
         Enum.to_list(start_port..end_port)
       
       true ->
-        # Default ports if none specified
         [20, 21, 22, 23, 25, 53, 80, 110, 443, 993, 995]
     end
   end

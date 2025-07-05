@@ -8,7 +8,7 @@ defmodule PortScanner.MixProject do
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      escript: escript()  # Add this line
+      escript: escript()
     ]
   end
 
