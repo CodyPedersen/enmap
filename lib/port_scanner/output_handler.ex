@@ -1,6 +1,6 @@
 defmodule PortScanner.OutputHandler do
-  @callback scan_started(host :: String.t(), port_count :: integer(), opts :: keyword()) :: :ok
-  @callback scan_completed(duration :: integer()) :: :ok
+  @callback on_start(host :: String.t(), port_count :: integer(), opts :: keyword()) :: :ok
+  @callback on_complete(duration :: integer()) :: :ok
   @callback print_results(results :: list(), stats :: map()) :: :ok
 end
 
@@ -8,7 +8,7 @@ end
 defmodule PortScanner.ConsoleOutput do
   @behaviour PortScanner.OutputHandler
   
-  def scan_started(hosts, port_count, opts) do
+  def on_start(hosts, port_count, opts) do
     max_concurrency = Keyword.get(opts, :max_concurrency, 100)
     timeout = Keyword.get(opts, :timeout, 1000)
     
@@ -16,7 +16,7 @@ defmodule PortScanner.ConsoleOutput do
     IO.puts("Max concurrency: #{max_concurrency}, Timeout: #{timeout}ms")
   end
   
-  def scan_completed(duration) do
+  def on_complete(duration) do
     IO.puts("\nScan completed in #{duration}ms")
   end
   
@@ -65,9 +65,9 @@ end
 defmodule PortScanner.JsonOutput do
   @behaviour PortScanner.OutputHandler
   
-  def scan_started(host, port_count, opts) do
+  def on_start(host, port_count, opts) do
     Jason.encode!(%{
-      event: "scan_started",
+      event: "on_start",
       host: host,
       port_count: port_count,
       options: Enum.into(opts, %{}) 
@@ -75,9 +75,9 @@ defmodule PortScanner.JsonOutput do
     |> IO.puts()
   end
   
-  def scan_completed(duration) do
+  def on_complete(duration) do
     Jason.encode!(%{
-      event: "scan_completed",
+      event: "on_complete",
       duration_ms: duration
     })
     |> IO.puts()

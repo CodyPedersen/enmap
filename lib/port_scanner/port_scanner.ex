@@ -5,7 +5,7 @@ defmodule PortScanner do
     ScanManager.clear_results()
     
     output_handler = Keyword.get(opts, :output_handler, PortScanner.ConsoleOutput)
-    output_handler.scan_started(
+    output_handler.on_start(
       Enum.join(hosts,","),
       length(ports),
       opts
@@ -21,7 +21,7 @@ defmodule PortScanner do
     end_time = System.monotonic_time(:millisecond)
     duration = end_time - start_time
     
-    output_handler.scan_completed(duration)
+    output_handler.on_complete(duration)
     print_results(output_handler)
   end
 
