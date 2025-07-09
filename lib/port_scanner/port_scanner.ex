@@ -1,6 +1,16 @@
 defmodule PortScanner do
   alias PortScanner.ScanManager
+  alias PortScanner.Scan
+  
   @task_supervisor_name PortScanner.ScanTaskSupervisor
+
+  # TODO: Migrate to dedicated module
+  defp create_scan("udp"), do: %Scan.UDP{}
+  defp create_scan("tcp"), do: %Scan.TCP{}
+  defp create_scan(_other) do
+    IO.puts("Invalid scan, defaulting to TCP")
+    create_scan("tcp")
+  end
 
   def scan_hosts(hosts, ports, opts) do
     ScanManager.clear_results()
@@ -24,38 +34,28 @@ defmodule PortScanner do
       ScanManager.get_stats() 
     )
   end
-
+  
   def scan_host(host, ports, opts \\ []) do
     max_concurrency = Keyword.get(opts, :max_concurrency, 100)
     timeout = Keyword.get(opts, :timeout, 1000)
     
+    scan = Keyword.get(opts, :scan)
+      |> create_scan()
+
     Task.Supervisor.async_stream(
       @task_supervisor_name,
       ports,
-      fn port -> scan_single_port(host, port, timeout) end,
+      fn port -> scan_single_port(scan, host, port, timeout) end,
       max_concurrency: max_concurrency,
       timeout: timeout + 500
     )
     |> Stream.run()
   end
   
-  defp scan_single_port(host, port, timeout) do
-    host_charlist = to_charlist(host)
-    
-    case :gen_tcp.connect(host_charlist, port, [], timeout) do
-      {:ok, socket} ->
-        :gen_tcp.close(socket)
-        ScanManager.add_result(host, port, :open)
-        {port, :open}
-      
-      {:error, :timeout} ->
-        ScanManager.add_result(host, port, :unknown)
-        {port, :unknown}
-      
-      {:error, _reason} ->
-        ScanManager.add_result(host, port, :closed)
-        {port, :closed}
-    end
+  defp scan_single_port(scan, host, port, timeout) do
+    result = Scan.scan_port(scan, host, port, timeout)
+    ScanManager.add_result(host, port, result)
+    {port, :closed}
   end
 end
 

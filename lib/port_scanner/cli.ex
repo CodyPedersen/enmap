@@ -18,7 +18,8 @@ defmodule PortScanner.CLI do
           timeout: :integer,
           concurrency: :integer,
           output: :string,
-          range: :string
+          range: :string,
+          scan: :string
         ],
         aliases: [
           h: :help,
@@ -27,7 +28,8 @@ defmodule PortScanner.CLI do
           t: :timeout,
           c: :concurrency,
           o: :output,
-          r: :range
+          r: :range,
+          s: :scan
         ]
       )
     case {options, argv} do
@@ -50,6 +52,7 @@ defmodule PortScanner.CLI do
       portscan -H <host> [options]
     Options:
       -H, --hosts <hosts>      Target hosts to scan
+      -s, --scan <scan>        Scan Protocol (tcp, udp)
       -p, --ports <ports>      Comma-separated ports (e.g., 80,443,8080)
       -r, --range <range>      Port range (e.g., 1-1000)
       -t, --timeout <ms>       Timeout in milliseconds (default: 1000)
@@ -77,11 +80,13 @@ defmodule PortScanner.CLI do
     timeout = Keyword.get(options, :timeout, 7000)
     concurrency = Keyword.get(options, :concurrency, 100)
     output_handler = get_output_handler(options)
+    scan_str = Keyword.get(options, :scan)
     
     PortScanner.scan_hosts(hosts, ports, [
       max_concurrency: concurrency,
       timeout: timeout,
-      output_handler: output_handler
+      output_handler: output_handler,
+      scan: scan_str
     ])
   end
 
