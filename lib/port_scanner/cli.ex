@@ -2,6 +2,7 @@ defmodule PortScanner.CLI do
   @moduledoc """
   Command line interface for Port Scanner
   """
+
   def main(args) do
     args
     |> parse_args()
@@ -44,6 +45,13 @@ defmodule PortScanner.CLI do
     end
   end
   
+  defp create_scan("udp"), do: %PortScanner.Scan.UDP{}
+  defp create_scan("tcp"), do: %PortScanner.Scan.TCP{}
+  defp create_scan(_other) do
+    IO.puts("Invalid scan, defaulting to TCP")
+    create_scan("tcp")
+  end
+  
   defp process(:help) do
     IO.puts """
     Port Scanner CLI
@@ -80,13 +88,13 @@ defmodule PortScanner.CLI do
     timeout = Keyword.get(options, :timeout, 7000)
     concurrency = Keyword.get(options, :concurrency, 100)
     output_handler = get_output_handler(options)
-    scan_str = Keyword.get(options, :scan)
+    scan = Keyword.get(options, :scan) |> create_scan()
     
     PortScanner.scan_hosts(hosts, ports, [
       max_concurrency: concurrency,
       timeout: timeout,
       output_handler: output_handler,
-      scan: scan_str
+      scan: scan
     ])
   end
 

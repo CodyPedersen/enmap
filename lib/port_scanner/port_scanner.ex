@@ -4,13 +4,6 @@ defmodule PortScanner do
   
   @task_supervisor_name PortScanner.ScanTaskSupervisor
 
-  # TODO: Migrate to dedicated module
-  defp create_scan("udp"), do: %Scan.UDP{}
-  defp create_scan("tcp"), do: %Scan.TCP{}
-  defp create_scan(_other) do
-    IO.puts("Invalid scan, defaulting to TCP")
-    create_scan("tcp")
-  end
 
   def scan_hosts(hosts, ports, opts) do
     ScanManager.clear_results()
@@ -38,9 +31,7 @@ defmodule PortScanner do
   def scan_host(host, ports, opts \\ []) do
     max_concurrency = Keyword.get(opts, :max_concurrency, 100)
     timeout = Keyword.get(opts, :timeout, 1000)
-    
     scan = Keyword.get(opts, :scan)
-      |> create_scan()
 
     Task.Supervisor.async_stream(
       @task_supervisor_name,
