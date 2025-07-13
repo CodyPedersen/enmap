@@ -23,7 +23,6 @@ defmodule PortScanner.CLI do
           scan: :string
         ],
         aliases: [
-          h: :help,
           H: :hosts,
           p: :ports,
           t: :timeout,

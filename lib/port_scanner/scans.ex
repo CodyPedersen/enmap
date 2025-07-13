@@ -29,6 +29,12 @@ defmodule PortScanner.Scan.TCP do
     
     def name(_scan), do: :tcp
   end
+
+  defimpl Jason.Encoder, for: PortScanner.Scan.TCP do
+    def encode(scan, opts) do
+      PortScanner.Scan.name(scan) |> Jason.Encoder.encode(opts)
+    end
+  end
 end
 
 
@@ -72,4 +78,11 @@ defmodule PortScanner.Scan.UDP do
       end
     end
   end
+
+  defimpl Jason.Encoder, for: PortScanner.Scan.UDP do
+    def encode(scan, opts) do
+      PortScanner.Scan.name(scan) |> Jason.Encoder.encode(opts)
+    end
+  end
+
 end
